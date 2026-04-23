@@ -19,17 +19,58 @@ export default function SearchForm() {
     setResults(null);
 
     try {
-      // Endpoint to our secure Next.js API route
-      const response = await fetch(`/api/search`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ query, type: searchType }),
-      });
+      // ⚠️ ATENÇÃO: Como estamos rodando no GitHub Pages (Site Estático),
+      // a requisição é feita pelo navegador do usuário.
+      // Chaves de API configuradas aqui ficarão visíveis publicamente.
 
-      const data = await response.json();
+      let data;
 
-      if (!response.ok) {
-        throw new Error(data.error || "Failed to fetch data");
+      if (searchType === "username") {
+        // Busca de username usando a API do GitHub diretamente no front-end
+        const headers: HeadersInit = {
+          'Accept': 'application/vnd.github.v3+json',
+        };
+
+        // Se o usuário adicionou a chave nas Actions/Vercel (lembre de expor com NEXT_PUBLIC_)
+        if (process.env.NEXT_PUBLIC_GITHUB_API_KEY) {
+          headers['Authorization'] = `token ${process.env.NEXT_PUBLIC_GITHUB_API_KEY}`;
+        }
+
+        const response = await fetch(`https://api.github.com/users/${query}`, { headers });
+        
+        if (response.ok) {
+          const githubData = await response.json();
+          data = {
+            success: true,
+            query,
+            type: searchType,
+            data: {
+              platforms_checked: ['GitHub'],
+              found: [{
+                platform: 'GitHub',
+                url: githubData.html_url,
+                name: githubData.name,
+                bio: githubData.bio,
+                public_repos: githubData.public_repos
+              }]
+            }
+          };
+        } else {
+          data = {
+            success: true,
+            query,
+            type: searchType,
+            data: {
+              platforms_checked: ['GitHub'],
+              found: [{
+                platform: 'GitHub',
+                status: 'Not Found or Rate Limited'
+              }]
+            }
+          };
+        }
+      } else {
+        throw new Error(`O módulo para "${searchType}" ainda não foi implementado no modo estático.`);
       }
 
       setResults(data);
