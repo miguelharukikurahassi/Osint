@@ -10,6 +10,24 @@ export default function SearchForm() {
   const [results, setResults] = useState<any>(null);
   const [error, setError] = useState("");
 
+  const checkSocialProfile = async (platform: string, url: string) => {
+    try {
+      // Uso de um proxy de CORS gratuito pois navegadores bloqueiam requests para sites de terceiros
+      const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(url)}`;
+      const response = await fetch(proxyUrl);
+      const data = await response.json();
+      
+      const isFound = data.status && data.status.http_code === 200 && !data.contents.includes("Page Not Found");
+      return {
+        platform,
+        url: isFound ? url : null,
+        status: isFound ? "Encontrado" : "Não Encontrado / Privado"
+      };
+    } catch (e) {
+      return { platform, status: "Erro de Conexão (Bloqueado)" };
+    }
+  };
+
   const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!query) return;
