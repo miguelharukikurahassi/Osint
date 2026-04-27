@@ -1,8 +1,9 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
+import { viteSingleFile } from 'vite-plugin-singlefile'
 
 // https://vitejs.dev/config/
 export default defineConfig({
-  plugins: [react()],
-  base: '/Osint/', // CRUCIAL: Nome do repositório no GitHub para os assets carregarem
+  plugins: [react(), viteSingleFile()],
+  base: './', // Necessário para single file funcionar localmente
 })
